@@ -1,0 +1,23 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://scenes/scene_china.gd" type="Script" id=1]
+[ext_resource path="res://assets/china-background.png" type="Texture" id=2]
+[ext_resource path="res://player/player.tscn" type="PackedScene" id=3]
+[ext_resource path="res://sfx/mplayer.tscn" type="PackedScene" id=4]
+
+[node name="china" type="Node2D"]
+script = ExtResource( 1 )
+
+[node name="background" type="Sprite" parent="."]
+texture = ExtResource( 2 )
+offset = Vector2( 160, 100 )
+
+[node name="player1" parent="." instance=ExtResource( 3 )]
+position = Vector2( 80, 142 )
+
+[node name="player2" parent="." instance=ExtResource( 3 )]
+position = Vector2( 240, 142 )
+player_num = 2
+dir_cur = -1
+
+[node name="mplayer" parent="." instance=ExtResource( 4 )]

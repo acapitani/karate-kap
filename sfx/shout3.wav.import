@@ -1,0 +1,21 @@
+[remap]
+
+importer="wav"
+type="AudioStreamSample"
+path="res://.import/shout3.wav-4543d44d96a0e86aa7533e6c071125cb.sample"
+
+[deps]
+
+source_file="res://sfx/shout3.wav"
+dest_files=[ "res://.import/shout3.wav-4543d44d96a0e86aa7533e6c071125cb.sample" ]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=true
+edit/normalize=true
+edit/loop=false
+compress/mode=0

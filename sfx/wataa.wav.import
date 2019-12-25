@@ -1,0 +1,21 @@
+[remap]
+
+importer="wav"
+type="AudioStreamSample"
+path="res://.import/wataa.wav-37b760c4a20ac56d6f59e9e3cc38e6a6.sample"
+
+[deps]
+
+source_file="res://sfx/wataa.wav"
+dest_files=[ "res://.import/wataa.wav-37b760c4a20ac56d6f59e9e3cc38e6a6.sample" ]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=true
+edit/normalize=true
+edit/loop=false
+compress/mode=0
