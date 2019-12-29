@@ -105,10 +105,10 @@ func reset_cutscene():
 func fight():
 	fsm.state_nxt = fsm.STATES.ingame
 	
-func is_ingame():
-	if fsm.state_cur==fsm.STATES.ingame:
-		return true
-	return false 
+#func is_ingame():
+#	if fsm.state_cur==fsm.STATES.ingame:
+#		return true
+#	return false 
 	
 func attack(anim):
 	anim_nxt = anim
@@ -143,15 +143,18 @@ func weak_off():
 func shield_on():
 	shield = true
 	shield_flashing_timeout = 0.1
+	activate_shield_timer()
+	
 	
 func activate_shield_timer():
 	$shield_timer.start()
+	print("shield start")
 	
 func _check_hit():
 	var hit = false
 	var dir = DIRHIT_MED
 	var iskick = true
-	if on_hit and other_player!=null and other_player.is_ingame() and other_player.shield==false:
+	if on_hit and other_player!=null and other_player.is_ingame and other_player.shield==false:
 		var areas = []
 		if anim_cur=="footsweep_kick":
 			dir = DIRHIT_LOW
@@ -438,8 +441,8 @@ func do_action3(delta):
 		if prob<0.1:
 			cpu_next_action = ACTION_DOUBLEKICK
 		else:
-			var actions = [ACTION_FLYINGKICK, ACTION_FOOTSWEEPKICK]
-			cpu_next_action = actions[randi()%2]
+			var actions = [ACTION_FLYINGKICK, ACTION_FOOTSWEEPKICK, ACTION_FACEKICK]
+			cpu_next_action = actions[randi()%3]
 	else:
 		var prob = randf()
 		if prob>0.7:
@@ -502,7 +505,11 @@ func cpu_ai(delta):
 				cpu_status = STATUS_MOVE
 				cpu_move_time = randf()/6.0
 			if prob<0.1 and dist<0.3 and other_player.is_ingame:
-					cpu_next_action = ACTION_FLYINGKICK
+					if (randi()%2)==0:
+						cpu_next_action = ACTION_FLYINGKICK
+					else:
+						cpu_next_action = ACTION_FACEKICK
+					
 					if other_pos.x<pos.x:
 						dir_cur = -1
 					else:
@@ -686,4 +693,5 @@ func whoosh2():
 
 func _on_shield_timer_timeout():
 	shield = false
+	print("shield timeout")
 	

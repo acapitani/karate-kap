@@ -824,5 +824,6 @@ script = ExtResource( 13 )
 [node name="mplayer" parent="." instance=ExtResource( 14 )]
 
 [node name="shield_timer" type="Timer" parent="."]
+wait_time = 2.5
 one_shot = true
 [connection signal="timeout" from="shield_timer" to="." method="_on_shield_timer_timeout"]

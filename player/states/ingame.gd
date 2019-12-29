@@ -13,8 +13,6 @@ func initialize( obj ):
 	obj.is_attack = false
 	obj.is_ingame = true
 	obj.cpu_status = obj.STATUS_IDLE
-	if obj.shield:
-		obj.activate_shield_timer()
 	
 func terminate(obj):
 	obj.weak_off()
