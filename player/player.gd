@@ -27,11 +27,42 @@ const DIRHIT_HIGH = 1
 const DIRHIT_MED = 2
 const DIRHIT_LOW = 3
 
+const ACTION_NONE = 0
+const ACTION_FORW = 1
+const ACTION_BACK = 2
+const ACTION_JUMP = 3
+const ACTION_SHINKICK = 4
+const ACTION_FOOTSWEEPKICK = 5
+const ACTION_STOMACHPUNCH = 6
+const ACTION_REVFACEPUNCH = 7
+const ACTION_FLYINGKICK = 8
+const ACTION_HEADBUTT = 9
+const ACTION_STOMACHKICK = 10
+const ACTION_FACEKICK = 11
+const ACTION_REVFOOTSWEEPKICK = 12
+const ACTION_REVFACEKICK = 13
+const ACTION_BACKFLIP = 14
+const ACTION_DOUBLEKICK = 15
+const ACTION_FACEPUNCH = 16
+
+const STATUS_IDLE = 0
+const STATUS_WAIT = 1
+const STATUS_MOVE = 2
+const STATUS_ATTACK = 3
+const STATUS_DEFENSE = 4
+
+var cpu_next_action = 0
+var cpu_status = 0
+var cpu_block = false
+
 var fsm = null
 var other_player = null
 var vel = Vector2()
 
 var is_jump = false
+var is_attack = false
+var is_fall = false
+var is_ingame = false
 var on_hit = false
 var hit_playing = false
 var anim_cur = ""
@@ -51,7 +82,11 @@ func _ready():
 	
 func _set_belt_color():
 	var mat = $rotate/player.get_material().duplicate()
-	if player_num==1:
+	if player_num<0:
+		mat.set_shader_param("belt_color", Color(1.0, 1.0, 1.0, 1.0))
+	elif player_num==0:
+		mat.set_shader_param("belt_color", Color(1.0, 0.0, 0.0, 1.0))
+	elif player_num==1:
 		mat.set_shader_param("belt_color", Color(0.0, 0.0, 1.0, 1.0))
 	else:
 		mat.set_shader_param("belt_color", Color(0.0, 1.0, 0.0, 1.0))
@@ -171,7 +206,9 @@ func _check_hit():
 	
 func check_rotate():
 	var rot = false
-	if player_num==1 and Input.is_action_pressed("btn_rotate"):
+	if player_num<=0:
+		return cpu_check_rotate()
+	elif player_num==1 and Input.is_action_pressed("btn_rotate"):
 		rot = true
 	elif player_num==2 and Input.is_action_pressed("btn_rotate2"):
 		rot = true 
@@ -183,6 +220,8 @@ func set_block():
 func check_block():
 	var block = false 
 	if fsm.state_cur==fsm.STATES.ingame:
+		if player_num<=0:
+			return cpu_check_block()
 		if dir_cur==1:
 			if player_num==1:
 				if Input.is_action_pressed("btn_left"):
@@ -205,7 +244,9 @@ func check_move():
 	var moving = false
 	var action = false
 	
-	if player_num==1:
+	if player_num<=0:
+		return cpu_check_move()
+	elif player_num==1:
 		if Input.is_action_pressed("btn_left"):
 			dir.x = -1
 			moving = true
@@ -281,9 +322,300 @@ func _physics_process( delta ):
 	_check_limits()
 	_check_hit()
 	_shadow()
-		# interact
-		#_interact( delta )
+
+# ------------------------ CPU AI --------------------------------------
+var cpu_move_time = 0.0
+var cpu_wait_time = 0.0
+var cpu_move_dir = 1
+
+func do_wait(delta):
+	cpu_wait_time -= delta
+	if cpu_wait_time<=0.0:
+		cpu_wait_time = 0.0
+		cpu_status = STATUS_IDLE
+
+func do_move(delta):
+	cpu_move_time -= delta
+	if cpu_move_time<=0.0:
+		cpu_move_time = 0.0
+		cpu_status = STATUS_IDLE
+	else:
+		if dir_cur==cpu_move_dir:
+			cpu_next_action = ACTION_FORW
+		else:
+			cpu_next_action = ACTION_BACK
+			
+func do_direct_attack():
+	var actions = [ACTION_FACEPUNCH, ACTION_SHINKICK, ACTION_STOMACHPUNCH, ACTION_HEADBUTT, ACTION_STOMACHKICK, ACTION_FACEKICK]
+	cpu_next_action = actions[randi()%6]
+	
+func do_reverse_attack():
+	var actions = [ACTION_REVFACEPUNCH, ACTION_REVFACEKICK]
+	cpu_next_action = actions[randi()%2]
+	
+func do_action1(delta):
+	# near, attacca, difende o si back-flip
+	var other_pos = other_player.get_position()
+	var pos = get_position()
+	if other_player.is_ingame:
+		# attacca o attende
+		var prob = randf()
+		if prob>0.3:
+			if (dir_cur==1 and other_pos.x>pos.x) or (dir_cur==-1 and other_pos.x<=pos.x):
+				do_direct_attack()
+			else:
+				do_reverse_attack()
+		else:
+			cpu_wait_time = 0.2
+			do_wait(delta)
+	else:
+		# si difende o attende
+		if not other_player.is_fall:
+			# si difende
+			var prob =randf()
+			if prob>0.5:
+				cpu_block = true
+			elif prob>0.3:
+				cpu_next_action = ACTION_JUMP
+			elif prob>0.2:
+				cpu_next_action = ACTION_BACKFLIP
+			else:
+				cpu_wait_time = 0.1
+				do_wait(delta)
+		else:
+			cpu_wait_time = 0.2
+			do_wait(delta)
 		
+func do_action2(delta):
+	# too near, mi devo spostare
+	var prob = randf()
+	var pos = get_position()
+	if prob>0.7 and pos.x>32 and pos.x<300:
+		cpu_move_time = 0.3
+		if dir_cur==1:
+			cpu_move_dir = -1
+		else:
+			cpu_move_dir = 1
+		cpu_status = STATUS_MOVE
+	elif prob>0.5 and pos.x>32 and pos.x<300:
+		cpu_next_action = ACTION_BACKFLIP
+	elif prob>0.3:
+		cpu_wait_time = 0.1
+		do_wait(delta)
+	else:
+		do_action1(delta)
+
+func do_action3(delta):
+	# quasi near, calci volanti, scivolata o si avvicina
+	var other_pos = other_player.get_position()
+	var pos = get_position()
+	if (dir_cur==1 and other_pos.x>pos.x) or (dir_cur==-1 and other_pos.x<pos.x) and other_player.is_ingame:
+		var prob = randf()
+		if prob<0.1:
+			cpu_next_action = ACTION_DOUBLEKICK
+		else:
+			var actions = [ACTION_FLYINGKICK, ACTION_FOOTSWEEPKICK]
+			cpu_next_action = actions[randi()%2]
+	else:
+		var prob = randf()
+		if prob>0.7:
+			if other_pos.x>=pos.x:
+				dir_cur = 1
+			else:
+				dir_cur = -1
+			cpu_move_time = 0.2
+			cpu_move_dir = dir_cur
+			cpu_status = STATUS_MOVE
+		else:
+			cpu_wait_time = 0.2
+			do_wait(delta)
+
+func cpu_ai(delta):
+	if player_num>0:
+		return
+	cpu_block = false
+	cpu_next_action = ACTION_NONE
+	if cpu_status==STATUS_IDLE:
+		var other_pos = other_player.get_position()
+		var pos = get_position()
+		var dist = abs(other_pos.x-pos.x)/320.0
+		if dist>0.5:
+			# grande distanza
+			if randf()>0.6:
+				if other_pos.x<pos.x:
+					dir_cur = -1
+					cpu_move_dir = -1
+				else:
+					dir_cur = 1
+					cpu_move_dir = 1
+				cpu_status = STATUS_MOVE
+				cpu_move_time = randf()/4.0
+			else:
+				cpu_wait_time = 0.2+randf()
+				cpu_status = STATUS_WAIT
+		elif dist>0.25:
+			# media distanza
+			var prob = randf()
+			if prob>0.6:
+				if other_pos.x<pos.x:
+					dir_cur = -1
+					cpu_move_dir = -1
+				else:
+					dir_cur = 1
+					cpu_move_dir = 1
+				cpu_status = STATUS_MOVE
+				cpu_move_time = randf()/4.0
+			elif prob>0.4:
+				cpu_wait_time = randf()/4.0
+				cpu_status = STATUS_WAIT
+			elif prob>0.3:
+				if other_pos.x<pos.x:
+					dir_cur = -1
+					cpu_move_dir = 1
+				else:
+					dir_cur = 1
+					cpu_move_dir = -1
+				cpu_status = STATUS_MOVE
+				cpu_move_time = randf()/6.0
+			if prob<0.1 and dist<0.3 and other_player.is_ingame:
+					cpu_next_action = ACTION_FLYINGKICK
+					if other_pos.x<pos.x:
+						dir_cur = -1
+					else:
+						dir_cur = 1
+		elif dist>0.1:
+			# quasi near, calci volanti, scivolata o si avvicina
+			do_action3(delta)
+		elif dist>0.05:
+			# near, attacca, difende o si back-flip
+			do_action1(delta)
+		else:
+			# too near, mi devo spostare
+			do_action2(delta)
+				
+	elif cpu_status==STATUS_WAIT:
+		do_wait(delta)
+	elif cpu_status==STATUS_MOVE:
+		do_move(delta)
+
+func cpu_check_move():
+	var moving = true
+	var direction = DIR_NONE
+	var action = false
+	"""
+	var other_pos = other_player.get_position()
+	var other_state = other_player.fsm.state_cur
+	var other_anim = other_player.anim_cur
+	var pos = get_position()
+	
+	var diff = abs(other_pos.x-pos.x)
+	if other_state==other_player.fsm.STATES.ingame and (diff>64):
+		if dir_cur==1 and other_pos.x>pos.x:
+			moving = true
+			direction = DIR_RIGHT
+		elif dir_cur==-1 and other_pos.x<pos.x:
+			moving = true
+			direction = DIR_LEFT
+	"""
+	match cpu_next_action:
+		ACTION_NONE:
+			moving = false
+		ACTION_BACK:
+			if dir_cur==1:
+				direction = DIR_LEFT
+			else:
+				direction = DIR_RIGHT
+		ACTION_FORW:
+			if dir_cur==1:
+				direction = DIR_RIGHT
+			else:
+				direction = DIR_LEFT
+		ACTION_JUMP:
+			direction = DIR_UP
+		ACTION_FACEPUNCH:
+			if dir_cur==1:
+				direction = DIR_UPRIGHT
+			else:
+				direction = DIR_UPLEFT
+		ACTION_SHINKICK:
+			if dir_cur==1:
+				direction = DIR_DOWNRIGHT
+			else:
+				direction = DIR_DOWNLEFT
+		ACTION_FOOTSWEEPKICK:
+			direction = DIR_DOWN
+		ACTION_STOMACHPUNCH:
+			if dir_cur==1:
+				direction = DIR_DOWNLEFT
+			else:
+				direction = DIR_DOWNRIGHT
+		ACTION_REVFACEPUNCH:
+			if dir_cur==1:
+				direction = DIR_UPLEFT
+			else:
+				direction = DIR_UPRIGHT
+		ACTION_FLYINGKICK:
+			direction = DIR_UP
+			action = true
+		ACTION_HEADBUTT:
+			action = true
+			if dir_cur==1:
+				direction = DIR_UPRIGHT
+			else:
+				direction = DIR_UPLEFT
+		ACTION_STOMACHKICK:
+			action = true
+			if dir_cur==1:
+				direction = DIR_RIGHT
+			else:
+				direction = DIR_LEFT
+		ACTION_FACEKICK:
+			action = true
+			if dir_cur==1:
+				direction = DIR_DOWNRIGHT
+			else:
+				direction = DIR_DOWNLEFT
+		ACTION_REVFOOTSWEEPKICK:
+			action = true
+			direction = DIR_DOWN
+		ACTION_REVFACEKICK:
+			action = true
+			if dir_cur==1:
+				direction = DIR_DOWNLEFT
+			else:
+				direction = DIR_DOWNRIGHT
+		ACTION_BACKFLIP:
+			action = true
+			if dir_cur==1:
+				direction = DIR_LEFT
+			else:
+				direction = DIR_RIGHT
+		ACTION_DOUBLEKICK:
+			action = true
+			if dir_cur==1:
+				direction = DIR_UPLEFT
+			else:
+				direction = DIR_UPRIGHT
+	return [moving, direction, action]
+
+func cpu_check_rotate():
+	var rot = false
+	var pos = get_position()
+	var other_pos = other_player.get_position()
+	# verifica se sta dietro
+	if dir_cur==1 and other_pos.x<pos.x and (pos.x-other_pos.x)>16.0:
+		rot = true
+	elif dir_cur==-1 and other_pos.x>pos.x and (other_pos.x-pos.x)>16.0:
+		rot = true
+	return rot
+	
+func cpu_check_block():
+	if cpu_block:
+		cpu_block = false
+		return true
+	return false
+# ------------------------ CPU AI --------------------------------------
+	
 func wataa():
 	$mplayer.mplay(preload("res://sfx/wataa.wav"))
 	

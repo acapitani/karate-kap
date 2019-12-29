@@ -8,6 +8,9 @@ func initialize( obj ):
 	obj.vel.y = -obj.JUMP_VEL
 	gravity_timer = obj.JUMP_MAXTIME
 	
+func terminate(obj):
+	obj.is_jump = false
+	
 func run( obj, delta ):
 	var pos = obj.get_position()
 	if gravity_timer > 0:

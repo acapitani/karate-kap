@@ -6,6 +6,7 @@ var x_acc = 0
 
 func initialize( obj ):
 	obj.is_jump = true
+	obj.is_attack = true
 	obj.anim_nxt = "flying_kick"
 	obj.vel.y = -obj.JUMP_VEL
 	if obj.dir_cur==1:
@@ -14,6 +15,10 @@ func initialize( obj ):
 		x_acc = -100
 	obj.vel.x = x_acc
 	gravity_timer = obj.JUMP_MAXTIME
+	
+func terminate(obj):
+	obj.is_jump = false
+	obj.is_attack = false
 	
 func run( obj, delta ):
 	var pos = obj.get_position()

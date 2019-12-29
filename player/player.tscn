@@ -785,7 +785,6 @@ anims/walk = SubResource( 34 )
 anims/walk_back = SubResource( 35 )
 
 [node name="states" type="Node" parent="."]
-editor/display_folded = true
 
 [node name="double_kick" type="Node" parent="states"]
 script = ExtResource( 5 )

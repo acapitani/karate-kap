@@ -10,14 +10,20 @@ func initialize( obj ):
 	obj.weak_on()
 	obj.hit_off()
 	obj.is_jump = false
+	obj.is_attack = false
+	obj.is_ingame = true
+	obj.cpu_status = obj.STATUS_IDLE
 	
 func terminate(obj):
 	obj.weak_off()
+	obj.is_ingame = false
 
 func run( obj, delta ):
 	wait_move -= delta
 	if wait_move<0.0:
 		wait_move = 0.0
+	
+	obj.cpu_ai(delta)
 	
 	var pos = obj.get_position()
 	var move = obj.check_move()

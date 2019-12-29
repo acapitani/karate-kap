@@ -4,9 +4,14 @@ var gravity_timer
 
 func initialize( obj ):
 	obj.is_jump = true
+	obj.is_attack = true
 	obj.anim_nxt = "double_kick"
 	obj.vel.y = -obj.JUMP_VEL
 	gravity_timer = obj.JUMP_MAXTIME
+	
+func terminate(obj):
+	obj.is_jump = false
+	obj.is_attack = false
 	
 func run( obj, delta ):
 	var pos = obj.get_position()
