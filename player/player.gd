@@ -70,6 +70,8 @@ var anim_nxt = ""
 
 var is_cutscene = false
 var shield = false
+var shield_flashing_timeout = 0.0
+var blood_scene = null
 
 onready var rotate = $rotate
 
@@ -79,6 +81,7 @@ func _ready():
 	# Initialize states machine
 	fsm = preload( "res://scripts/fsm.gd" ).new( self, $states, $states/ready, false )
 	_set_belt_color()
+	blood_scene = preload("res://player/blood.tscn")
 	#call_deferred("_set_belt_color")
 	
 func _set_belt_color():
@@ -139,6 +142,7 @@ func weak_off():
 	
 func shield_on():
 	shield = true
+	shield_flashing_timeout = 0.1
 	
 func activate_shield_timer():
 	$shield_timer.start()
@@ -193,6 +197,9 @@ func _check_hit():
 						if other_player.check_block():
 							other_player.set_block()
 						else:
+							var s = blood_scene.instance()
+							s.set_position(a.get_position())
+							other_player.rotate.add_child(s)
 							other_player.fall(HIT_FRONT)
 					else:
 						other_player.fall(HIT_FRONT)
@@ -313,6 +320,15 @@ func _check_limits():
 		
 func _shadow():
 	$rotate/shadow.frame = $rotate/player.frame
+	
+func _shield_flashing(delta):
+	if shield:
+		shield_flashing_timeout -= delta
+		if shield_flashing_timeout<=0.0:
+			shield_flashing_timeout = 0.1
+			$rotate.visible = not $rotate.visible
+	else:
+		$rotate.visible = true
 
 func _physics_process( delta ):
 	if is_cutscene:
@@ -329,6 +345,7 @@ func _physics_process( delta ):
 	_check_limits()
 	_check_hit()
 	_shadow()
+	_shield_flashing(delta)
 
 # ------------------------ CPU AI --------------------------------------
 var cpu_move_time = 0.0
