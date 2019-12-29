@@ -223,9 +223,12 @@ tracks/1/loop_wrap = true
 tracks/1/imported = false
 tracks/1/enabled = true
 tracks/1/keys = {
-"times": PoolRealArray( 2.8 ),
-"transitions": PoolRealArray( 1 ),
+"times": PoolRealArray( 2.5, 2.8 ),
+"transitions": PoolRealArray( 1, 1 ),
 "values": [ {
+"args": [  ],
+"method": "shield_on"
+}, {
 "args": [  ],
 "method": "fight"
 } ]
@@ -252,9 +255,12 @@ tracks/1/loop_wrap = true
 tracks/1/imported = false
 tracks/1/enabled = true
 tracks/1/keys = {
-"times": PoolRealArray( 2.8 ),
-"transitions": PoolRealArray( 1 ),
+"times": PoolRealArray( 2.6, 2.8 ),
+"transitions": PoolRealArray( 1, 1 ),
 "values": [ {
+"args": [  ],
+"method": "shield_on"
+}, {
 "args": [  ],
 "method": "fight"
 } ]
@@ -281,9 +287,12 @@ tracks/1/loop_wrap = true
 tracks/1/imported = false
 tracks/1/enabled = true
 tracks/1/keys = {
-"times": PoolRealArray( 2.8 ),
-"transitions": PoolRealArray( 1 ),
+"times": PoolRealArray( 2.6, 2.8 ),
+"transitions": PoolRealArray( 1, 1 ),
 "values": [ {
+"args": [  ],
+"method": "shield_on"
+}, {
 "args": [  ],
 "method": "fight"
 } ]
@@ -814,3 +823,7 @@ script = ExtResource( 12 )
 script = ExtResource( 13 )
 
 [node name="mplayer" parent="." instance=ExtResource( 14 )]
+
+[node name="shield_timer" type="Timer" parent="."]
+one_shot = true
+[connection signal="timeout" from="shield_timer" to="." method="_on_shield_timer_timeout"]

@@ -14,11 +14,10 @@ offset = Vector2( 160, 100 )
 
 [node name="player1" parent="." instance=ExtResource( 3 )]
 position = Vector2( 80, 142 )
-player_num = -1
 
 [node name="player2" parent="." instance=ExtResource( 3 )]
 position = Vector2( 240, 142 )
-player_num = 0
+player_num = 2
 dir_cur = -1
 
 [node name="mplayer" parent="." instance=ExtResource( 4 )]

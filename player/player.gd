@@ -69,6 +69,7 @@ var anim_cur = ""
 var anim_nxt = ""
 
 var is_cutscene = false
+var shield = false
 
 onready var rotate = $rotate
 
@@ -136,11 +137,17 @@ func weak_off():
 	# $rotate/weak_areas.set_process(false)
 	pass
 	
+func shield_on():
+	shield = true
+	
+func activate_shield_timer():
+	$shield_timer.start()
+	
 func _check_hit():
 	var hit = false
 	var dir = DIRHIT_MED
 	var iskick = true
-	if on_hit and other_player!=null and other_player.is_ingame():
+	if on_hit and other_player!=null and other_player.is_ingame() and other_player.shield==false:
 		var areas = []
 		if anim_cur=="footsweep_kick":
 			dir = DIRHIT_LOW
@@ -659,9 +666,7 @@ func whoosh2():
 		return
 	$mplayer.mplay(preload("res://sfx/whoosh2.wav"))
 	hit_playing = true
-	
-	
-	
-	
-	
+
+func _on_shield_timer_timeout():
+	shield = false
 	
