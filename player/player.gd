@@ -648,7 +648,9 @@ func cpu_check_block():
 # ------------------------ CPU AI --------------------------------------
 	
 func wataa():
-	$mplayer.mplay(preload("res://sfx/wataa.wav"))
+	var p = randi()%4
+	if p==1:
+		$mplayer.mplay(preload("res://sfx/wataa.wav"))
 	
 func shout():
 	var n = randi()%6

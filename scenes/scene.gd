@@ -13,7 +13,7 @@ func _ready():
 	input_timer.connect( "timeout", self, "_on_input_timer_timeout" )
 	add_child( input_timer )
 	input_timer.start()
-	#game.play_music( 0 )
+	game.play_music( 0 )
 	
 func _on_input_timer_timeout():
 	can_input = true

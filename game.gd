@@ -9,9 +9,14 @@ const FLOOR_Y = 142
 const LIMIT_LEFT = 20
 const LIMIT_RIGHT = 300
 
+const MODE_1PVSCPU = 0
+const MODE_1PVS2P = 1
+const MODE_CPUVSCPU = 2
+
 var player = null setget _set_player, _get_player
 var main = null
 var gamestate setget _set_gamestate
+var game_mode = 0
 #===========================
 func _set_player( v ):
 	player = weakref( v )
@@ -23,6 +28,11 @@ func set_initial_gamestate():
 	gamestate = {
 		"cur_scene": ""
 		}
+	game_mode = MODE_1PVSCPU
+		
+func set_game_mode(mode):
+	game_mode = mode
+
 func _set_gamestate( v ):
 	gamestate = v
 	if main != null:
@@ -36,7 +46,7 @@ func _ready():
 	set_initial_gamestate()
 	Engine.set_target_fps(Engine.get_iterations_per_second())
 
-var songs = [preload( "res://music/titlesong.ogg" )]
+var songs = [preload( "res://music/music.ogg" )]
 
 var cursong = -1
 func play_music( no ):

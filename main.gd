@@ -1,7 +1,10 @@
 extends Node2D
 
-const FIRST_SCN = "res://scenes/scene_china.tscn"
-const MENU_SCN = "res://scenes/scene_china.tscn"
+#const FIRST_SCN = "res://scenes/scene_china.tscn"
+#const MENU_SCN = "res://scenes/scene_china.tscn"
+
+const FIRST_SCN = "res://scenes/start_menu/start_menu.tscn"
+const MENU_SCN = "res://scenes/start_menu/start_menu.tscn"
 
 func _ready():
 	game.main = self
